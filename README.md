@@ -1,4 +1,6 @@
 # KAIROX
+<img width="1917" height="1065" alt="Screenshot 2026-11-05 214228" src="https://github.com/user-attachments/assets/bef3c529-f3ce-4bf5-b738-656c7206c88d" />
+<img width="1917" height="867" alt="image" src="https://github.com/user-attachments/assets/4356cf7c-f7b3-461e-adee-6eeff33af4d1" />
 
 KAIROX is a Windows-first endpoint-defense project. The current milestone is a polished, interactive desktop UI prototype. Its filesystem, events, incidents, scan, and detection results are **simulated sample data**. The app does not currently watch the real filesystem, create canaries, run ML inference, persist telemetry, quarantine files, or contain processes.
 
