@@ -95,6 +95,33 @@ The map UI and sample-data simulation are separated from the dashboard shell. Ne
 - No security-sensitive system action or real monitoring is implemented.
 - The UI follows the supplied KAIROX visual direction and remains usable at common desktop window sizes.
 
+## Backend plan gaps (added during review)
+
+The original backend plan was reviewed against the current codebase. The full three-member plan, the gap table, the Phase 1 decision list, and the shared contracts now live in `README.md` under **Backend integration plan** and **Three-member backend work split**. The items below were missing and must not be dropped.
+
+**Blocking decisions for Phase 1:**
+
+1. Python sidecar vs ONNX inference in Rust — recommended: ONNX in Rust, Python kept for training.
+2. `notify` crate vs raw `ReadDirectoryChangesW`.
+3. Whether `process` fields are optional in schema v1 — `ReadDirectoryChangesW` provides no PID.
+4. Path handling: full, redacted, or hashed.
+5. Ownership of `src-tauri/src/lib.rs` and `src/types.ts` — both are edited by all three members today.
+6. Drop policy for the bounded queue — counted and reported, never silent.
+7. Performance budgets — 5k events/sec, <3% CPU, <150MB RSS, p95 detection latency <2s.
+8. Elevation requirement — user-profile directories need no admin; `C:\` and ETW kernel providers do.
+
+**Gaps found in the current codebase:**
+
+- `src-tauri/src/lib.rs` exposes a single `get_runtime_info` command and reports `mode: "demo"`; no collector exists.
+- `src-tauri/Cargo.toml` declares only `serde` and `tauri`. No `tokio`, `serde_json`, watcher, or `rusqlite`.
+- `src/App.tsx` holds all state inline with no `src/services/` or `src/hooks/` layer. The demo/live seam does not exist yet.
+- `src/types.ts` declares `simulated: true` as a literal type, `id` as `number`, and `timestampMs` as `number`, which cannot represent live events.
+- `ThreatIncident`, `CanaryAsset`, and `ScanState` have no data contract at all.
+- `filesystemSimulator.ts` seeds hand-placed map coordinates and fake paths, so real telemetry has nowhere to render.
+- The public datasets are Sysmon-based while the planned collector emits filename and action only, so a feature availability matrix is required before any model is trained.
+
+**Scope rule:** behavioral rules are the first detection deliverable, not the last. They need no training data and catch most ransomware.
+
 ## Environment note
 
 The application targets Windows and requires Node.js/npm, the Rust MSVC toolchain, Visual Studio C++ Build Tools, and WebView2. `cl.exe` and `link.exe` must be available to the terminal that launches Cargo.
