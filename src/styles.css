@@ -453,6 +453,26 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
 .timeline-event { width: 100%; padding: 0; border: 0; background: transparent; color: inherit; text-align: left; cursor: pointer; }
 .timeline-dot.amber { background: var(--amber); color: var(--amber); }
 .inspector-empty { display: flex; flex-direction: column; justify-content: center; gap: 16px; padding: 20px; }
+
+/* ---------------------------------------------------------------------------
+   Backend gate
+
+   Rendered only when the active backend has not finished loading, or has
+   failed. Demo never shows it - its seed is complete, so `status` starts as
+   "ready" - which is what keeps demo mode rendering exactly as it did before
+   the service seam existed.
+   --------------------------------------------------------------------------- */
+.backend-gate {
+  display: grid;
+  place-items: center;
+  height: 100vh;
+  min-height: 680px;
+  padding: 24px;
+  background: radial-gradient(ellipse at 68% 0%, #0c1724 0%, transparent 45%), var(--bg);
+}
+.backend-gate > .panel { width: min(560px, 100%); }
+.backend-gate .empty-state p { max-width: 48ch; line-height: 1.6; }
+.backend-gate-actions { display: flex; gap: 10px; align-items: center; justify-content: center; }
 .inspector-empty .demo-disclaimer { align-self: stretch; }
 
 @media (max-height: 760px) {

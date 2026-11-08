@@ -1,5 +1,4 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
-import { invoke } from "@tauri-apps/api/core";
 import {
   Activity, AlertTriangle, Archive, ArrowDownToLine, ArrowRight, Bell,
   Check, ChevronRight, Clock3, Copy, Cpu, File, FileCode2, FileSearch,
@@ -7,16 +6,17 @@ import {
   Monitor, MoreHorizontal, Network, Pause, Play, Plus, Radar, Search,
   Settings, Shield, ShieldAlert, ShieldCheck, Sparkles, Terminal, X, Zap,
 } from "lucide-react";
-import { initialCanaries, initialIncidents, riskClass } from "./data";
+import { riskClass } from "./data";
 import IntelligenceMap from "./components/intelligence-map/IntelligenceMap";
-import { initialFilesystemNodes } from "./simulation/filesystemSimulator";
 import {
   applyActivityEvents,
-  createInitialEvents,
   createScanCompletedEvent,
   createSimulationEvents,
   createTestScenarioEvents,
 } from "./simulation/simulationEngine";
+import { useDashboardData } from "./hooks/useDashboardData";
+import { describeFailure } from "./services/backendError";
+import type { RuntimeInfo } from "./services/backend";
 import type { ActivityEvent, CanaryAsset, FilesystemNode, PageKey, Risk, ScanState, SimulationSpeed, ThreatIncident } from "./types";
 
 const navigation: Array<{ key: PageKey; label: string; icon: typeof Radar }> = [
@@ -41,43 +41,42 @@ interface SettingsState {
   logging: boolean;
   encryption: boolean;
 }
-interface RuntimeInfo {
-  appName: string;
-  platform: string;
-  mode: string;
-}
-const initialScan: ScanState = {
-  status: "idle", progress: 0, scannedDirectories: 0,
-  totalDirectories: initialFilesystemNodes.filter((node) => node.type === "directory").length,
-  scannedFiles: 0, totalFiles: initialFilesystemNodes.filter((node) => ["file", "canary", "suspicious", "threat"].includes(node.type)).length,
-  riskScore: null, message: "Ready to scan demonstration data",
-};
+// `RuntimeInfo` and the demo `initialScan` baseline used to be declared here.
+// Both now belong to the backend seam: the runtime shape is part of the
+// contract that produces it, and the scan baseline is derived from the demo
+// fixtures, so neither is App.tsx's to define.
 function App() {
   const [page, setPage] = useState<PageKey>("dashboard");
-  const [nodes, setNodes] = useState(() => applyActivityEvents(
-    initialFilesystemNodes,
-    createInitialEvents(Date.now(), initialFilesystemNodes),
-  ));
-  const [events, setEvents] = useState(() => createInitialEvents(Date.now(), initialFilesystemNodes));
-  const [canaries, setCanaries] = useState(initialCanaries);
-  const [incidents, setIncidents] = useState(initialIncidents);
+
+  // Dashboard state comes from the backend seam, not from `data.ts`. Before
+  // this hook App.tsx seeded nodes/events/canaries/incidents/scan itself and
+  // called `invoke("get_runtime_info")` directly, which welded the UI to a
+  // single data source. Everything below still behaves the same in demo mode;
+  // the difference is that switching backends no longer requires touching a
+  // component.
+  const {
+    nodes, setNodes, events, setEvents, canaries, setCanaries,
+    incidents, setIncidents, scan, setScan,
+    backend, backendLabel, backendDescription, status, backendFailure, retry,
+    runtimeInfo, runtimeError,
+    seedSnapshot, resetToSeed,
+    persistCanaryStatus, persistIncidentStatus, persistCanary,
+  } = useDashboardData();
+
   const [selectedEventId, setSelectedEventId] = useState<number>(1);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>("canary-exe");
-  const [selectedCanaryId, setSelectedCanaryId] = useState(initialCanaries[2].id);
-  const [selectedIncidentId, setSelectedIncidentId] = useState(initialIncidents[0].id);
+  const [selectedCanaryId, setSelectedCanaryId] = useState(seedSnapshot.canaries[2]?.id ?? "");
+  const [selectedIncidentId, setSelectedIncidentId] = useState(seedSnapshot.incidents[0]?.id ?? "");
   const [telemetryFilter, setTelemetryFilter] = useState("All");
   const [canaryFilter, setCanaryFilter] = useState("All");
   const [incidentFilter, setIncidentFilter] = useState("All");
   const [search, setSearch] = useState("");
   const [feedPaused, setFeedPaused] = useState(false);
   const [simulationSpeed, setSimulationSpeed] = useState<SimulationSpeed>(1);
-  const [scan, setScan] = useState<ScanState>(initialScan);
   const [scannedNodeIds, setScannedNodeIds] = useState<ReadonlySet<string>>(new Set());
   const [selectedFolder, setSelectedFolder] = useState("projects");
   const [notice, setNotice] = useState("");
   const [lastUpdate, setLastUpdate] = useState("Never");
-  const [runtimeInfo, setRuntimeInfo] = useState<RuntimeInfo | null>(null);
-  const [runtimeError, setRuntimeError] = useState("");
   const [settings, setSettings] = useState<SettingsState>({
     monitoring: true, canaryDetection: true, analytics: false,
     advanced: false, demo: true, logging: true, encryption: false,
@@ -148,7 +147,11 @@ function App() {
   }
 
   useEffect(() => {
-    if (feedPaused || !settings.monitoring) return;
+    // The in-app simulation is only a telemetry source for a backend whose
+    // feed IS simulated. On a live backend it must stay off: injecting
+    // simulated events into a live dashboard would present them as real,
+    // which this project must never do.
+    if (!backend.simulatedFeed || feedPaused || !settings.monitoring) return;
     const timer = window.setInterval(() => {
       const next = createSimulationEvents(eventSequence.current, nextEventId.current, nodesRef.current);
       eventSequence.current += 1;
@@ -156,7 +159,7 @@ function App() {
       addEvents(next);
     }, 4200 / simulationSpeed);
     return () => window.clearInterval(timer);
-  }, [feedPaused, settings.monitoring, simulationSpeed]);
+  }, [backend.simulatedFeed, feedPaused, settings.monitoring, simulationSpeed]);
 
   useEffect(() => {
     if (scan.status === "initializing") {
@@ -218,18 +221,6 @@ function App() {
     return () => window.clearTimeout(timer);
   }, [notice]);
 
-  useEffect(() => {
-    let active = true;
-    invoke<RuntimeInfo>("get_runtime_info")
-      .then((info) => {
-        if (active) setRuntimeInfo(info);
-      })
-      .catch((error: unknown) => {
-        if (active) setRuntimeError(error instanceof Error ? error.message : String(error));
-      });
-    return () => { active = false; };
-  }, []);
-
   const visibleEvents = useMemo(() => events.filter((event) => {
     const filterMatch = telemetryFilter === "All"
       || (telemetryFilter === "Canary events" && event.eventType.toLowerCase().includes("canary"))
@@ -274,16 +265,24 @@ function App() {
     setCanaryFilter("All");
     setSearch("");
     setNotice(`${canary.id} added to the demo registry`);
+    // Optimistic local update above; the backend call is a no-op in demo and a
+    // real insert on live. A failure surfaces rather than passing silently.
+    void persistCanary(canary).then((failure) => {
+      if (failure) setNotice(describeFailure(failure));
+    });
   }
 
   function toggleCanary() {
     if (!selectedCanary) return;
-    const status = selectedCanary.status === "Missing" ? "Active" : "Missing";
-    setCanaries((current) => current.map((canary) => canary.id === selectedCanary.id ? { ...canary, status } : canary));
+    const nextStatus = selectedCanary.status === "Missing" ? "Active" : "Missing";
+    setCanaries((current) => current.map((canary) => canary.id === selectedCanary.id ? { ...canary, status: nextStatus } : canary));
     setNodes((current) => current.map((node) => node.id === selectedCanary.nodeId
-      ? { ...node, status: status === "Missing" ? "Deleted" : "Active" }
+      ? { ...node, status: nextStatus === "Missing" ? "Deleted" : "Active" }
       : node));
-    setNotice(`Demo canary marked ${status.toLowerCase()}`);
+    setNotice(`Demo canary marked ${nextStatus.toLowerCase()}`);
+    void persistCanaryStatus(selectedCanary.id, nextStatus).then((failure) => {
+      if (failure) setNotice(describeFailure(failure));
+    });
   }
 
   function updateIncidentStatus() {
@@ -292,6 +291,9 @@ function App() {
       : selectedIncident.status === "Investigating" ? "Resolved" : "Open";
     setIncidents((current) => current.map((incident) => incident.id === selectedIncident.id ? { ...incident, status: next } : incident));
     setNotice(`${selectedIncident.id} moved to ${next}`);
+    void persistIncidentStatus(selectedIncident.id, next).then((failure) => {
+      if (failure) setNotice(describeFailure(failure));
+    });
   }
 
   async function copyPath(path: string) {
@@ -332,6 +334,13 @@ function App() {
   }
 
   function generateScenario(scenario: "suspicious" | "canary") {
+    // Generating demo traffic on a live backend would mix simulated records
+    // into real telemetry, so the action is refused rather than allowed to
+    // produce data that looks real.
+    if (!backend.simulatedFeed) {
+      setNotice("Sample scenarios are unavailable while connected to a live backend");
+      return;
+    }
     const generated = createTestScenarioEvents(scenario, nextEventId.current, nodesRef.current);
     nextEventId.current += generated.length;
     eventSequence.current += generated.length;
@@ -340,18 +349,15 @@ function App() {
   }
 
   function resetSimulation() {
-    const resetEvents = createInitialEvents(Date.now(), initialFilesystemNodes);
-    const resetNodes = applyActivityEvents(initialFilesystemNodes, resetEvents);
-    setNodes(resetNodes);
-    nodesRef.current = resetNodes;
-    setEvents(resetEvents);
+    // All five dashboard states come back from the backend in one shot, so
+    // reset and first paint go through the same path instead of App.tsx
+    // re-deriving demo data itself.
+    const fresh = resetToSeed();
+    nodesRef.current = fresh.nodes;
     eventSequence.current = 8;
     nextEventId.current = 9;
-    setCanaries(initialCanaries);
-    setIncidents(initialIncidents);
-    setSelectedEventId(resetEvents[0].id);
+    setSelectedEventId(fresh.events[0]?.id ?? 1);
     setSelectedNodeId(null);
-    setScan(initialScan);
     setScannedNodeIds(new Set());
     setFeedPaused(false);
     setSettings((current) => ({ ...current, monitoring: true }));
@@ -359,11 +365,17 @@ function App() {
   }
 
   function startScan() {
+    // Same rule as generateScenario: a simulated scan must not report progress
+    // over real data, because its results would read as real findings.
+    if (!backend.simulatedFeed) {
+      setNotice("Scanning is not available while connected to a live backend");
+      return;
+    }
     if (scanTimer.current !== null) window.clearInterval(scanTimer.current);
     scanCompletionQueued.current = false;
     setScannedNodeIds(new Set());
     setScan({
-      ...initialScan,
+      ...seedSnapshot.scan,
       totalDirectories: nodes.filter((node) => node.type === "directory").length,
       totalFiles: nodes.filter((node) => ["file", "canary", "suspicious", "threat"].includes(node.type)).length,
       status: "initializing",
@@ -382,6 +394,53 @@ function App() {
     setSelectedEventId(eventId);
     const event = events.find((item) => item.id === eventId);
     if (event) setSelectedNodeId(event.nodeId);
+  }
+
+  // A backend that has not loaded must block the dashboard. Rendering demo
+  // data here instead would show simulated records as if they were real, and
+  // rendering empty collections would crash the unguarded `events[0]` and
+  // `canaries[0]` reads below.
+  //
+  // Demo never reaches this branch: its seed is complete, so `status` starts
+  // as "ready" and stays there.
+  if (status !== "ready") {
+    const failed = status === "error";
+    return (
+      <div className="backend-gate" data-backend-status={status} data-backend={backendLabel}>
+        <section className="panel">
+          <div className="panel-header">
+            <div className="panel-title">
+              <span className="title-icon">{failed ? <AlertTriangle size={14} /> : <Radar size={14} />}</span>
+              <span>{failed ? "BACKEND UNAVAILABLE" : "CONNECTING TO BACKEND"}</span>
+              <small>{backendLabel}</small>
+            </div>
+          </div>
+          <div className="empty-state">
+            {failed ? <AlertTriangle size={26} /> : <Radar size={26} />}
+            <b>{failed ? `${backendLabel} backend failed to load` : "Loading dashboard"}</b>
+            <p>
+              {failed
+                ? backendFailure
+                  ? describeFailure(backendFailure)
+                  : "The backend reported an unknown failure."
+                : backendDescription}
+            </p>
+            {failed && <p>{backendDescription}</p>}
+            {failed && (
+              <div className="backend-gate-actions">
+                <button className="primary-button" onClick={retry}>Retry connection</button>
+                <button
+                  className="secondary-button"
+                  onClick={() => { window.location.search = ""; }}
+                >
+                  Switch to demo
+                </button>
+              </div>
+            )}
+          </div>
+        </section>
+      </div>
+    );
   }
 
   return (
