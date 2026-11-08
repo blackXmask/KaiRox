@@ -1,0 +1,7 @@
+{
+  "schema_version": 1,
+  "code": "STORAGE_BUSY",
+  "message": "database is locked",
+  "details": { "timeout_ms": 5000, "retry_after_ms": 100 },
+  "retryable": true
+}

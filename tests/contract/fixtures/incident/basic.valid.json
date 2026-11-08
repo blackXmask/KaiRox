@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "incident_id": "b7c9d1e3-5f4a-4b6c-8d2e-9f0a1b2c3d40",
+  "display_id": "INC-001",
+  "title": "Canary file modified",
+  "status": "open",
+  "risk_level": "critical",
+  "first_seen": "2026-11-08T12:00:00.000Z",
+  "last_seen": "2026-11-08T12:00:10.000Z",
+  "category": "Canary Trigger",
+  "attribution": "unknown · unsigned process",
+  "detection_rule": "canary_file_accessed_or_modified",
+  "classification": "Simulated Canary Trigger",
+  "canary_id": "9c8e7d6b-5a4f-4b2e-8c1a-0f9e8d7c6b52",
+  "path": "D:\\Projects\\suspicious_file.exe",
+  "node_id": "canary-exe",
+  "summary": "A registered canary was accessed.",
+  "origin": "demo"
+}

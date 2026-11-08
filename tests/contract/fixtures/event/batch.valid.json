@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "window_start": "2026-11-08T12:00:00.000Z",
+  "window_end": "2026-11-08T12:00:30.000Z",
+  "events": [
+    {
+      "schema_version": 1,
+      "event_id": "5f2b7c1e-9a4d-4e8f-b3c6-1d2e3f4a5b60",
+      "timestamp": "2026-11-08T12:00:01.000Z",
+      "event_type": "file_created",
+      "file_path": "C:\\Users\\Demo\\a.txt",
+      "old_path": null,
+      "process": { "pid": 100, "name": "notepad.exe" },
+      "source": "windows_collector",
+      "size_bytes": 12
+    },
+    {
+      "schema_version": 1,
+      "event_id": "8c5ea041-2d70-4b1c-e6f9-4a5b6c7d8e93",
+      "timestamp": "2026-11-08T12:00:02.000Z",
+      "event_type": "directory_changed",
+      "file_path": "C:\\Users\\Demo",
+      "old_path": null,
+      "process": null,
+      "source": "simulation",
+      "size_bytes": null
+    }
+  ]
+}

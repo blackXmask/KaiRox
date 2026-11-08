@@ -33,6 +33,7 @@ function toActivityEvent(seed: EventSeed, id: number, nodes: FilesystemNode[], n
     risk: seed.risk,
     nodeId: node.id,
     simulated: true,
+    source: "simulation",
   };
 }
 

@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "event_id": "7b4d9e30-1c6f-4a0b-d5e8-3f4a5b6c7d82",
+  "timestamp": "2026-11-08T12:00:10.000Z",
+  "event_type": "file_deleted",
+  "file_path": "C:\\Users\\Demo\\temp.tmp",
+  "old_path": null,
+  "process": null,
+  "source": "windows_collector",
+  "size_bytes": null
+}

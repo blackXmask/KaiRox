@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "event_id": "5f2b7c1e-9a4d-4e8f-b3c6-1d2e3f4a5b60",
+  "timestamp": "2026-11-08T12:00:00.000Z",
+  "event_type": "file_modified",
+  "file_path": "C:\\Users\\Demo\\report.docx",
+  "old_path": null,
+  "process": null,
+  "source": "made_up",
+  "size_bytes": 2048
+}

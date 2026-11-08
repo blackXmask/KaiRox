@@ -1,0 +1,7 @@
+{
+  "schema_version": 1,
+  "code": "storage-busy",
+  "message": "code must be SCREAMING_SNAKE_CASE",
+  "details": {},
+  "retryable": true
+}

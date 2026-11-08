@@ -37,7 +37,13 @@ export interface FilesystemNode {
 }
 
 export interface ActivityEvent {
+  /**
+   * Local render key. Wire events carry a uuid (`eventId`), but the UI keys
+   * selection and React lists on this number - see normalize.toDisplayEvent.
+   */
   id: number;
+  /** The wire/DB uuid for this event, when it came from a real event record. */
+  eventId?: string;
   time: string;
   timestampMs: number;
   eventType: string;
@@ -46,7 +52,10 @@ export interface ActivityEvent {
   volume: string;
   risk: Risk;
   nodeId: string;
-  simulated: true;
+  /** True when the event came from the simulator, not from a live collector. */
+  simulated: boolean;
+  /** Which wire source produced this event. Replaces reading `simulated`. */
+  source: "windows_collector" | "simulation";
 }
 
 export interface CanaryAsset {

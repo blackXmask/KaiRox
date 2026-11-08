@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "detection_id": "9d6fb152-3e81-4c2d-f70a-5b6c7d8e9f04",
+  "timestamp": "2026-11-08T12:00:05.000Z",
+  "related_event_ids": [],
+  "risk_level": "high",
+  "score": 101,
+  "reason": "Score outside the documented 0-100 range",
+  "engine": "lightgbm",
+  "model_version": "1.0",
+  "window_start": "2026-11-08T12:00:00.000Z",
+  "window_end": "2026-11-08T12:00:05.000Z"
+}

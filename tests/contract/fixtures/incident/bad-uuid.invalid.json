@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "incident_id": "INC-001",
+  "title": "Canary file modified",
+  "status": "open",
+  "risk_level": "critical",
+  "first_seen": "2026-11-08T12:00:00.000Z",
+  "last_seen": "2026-11-08T12:00:10.000Z",
+  "category": null,
+  "attribution": null,
+  "detection_rule": null,
+  "classification": null,
+  "canary_id": null,
+  "path": null,
+  "node_id": null,
+  "summary": null,
+  "origin": "demo"
+}

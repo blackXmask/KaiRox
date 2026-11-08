@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "event_id": "6a3c8d2f-0b5e-4f9a-c4d7-2e3f4a5b6c71",
+  "timestamp": "2026-11-08T12:00:05.000Z",
+  "event_type": "file_renamed",
+  "file_path": "C:\\Users\\Demo\\final_report.docx",
+  "old_path": "C:\\Users\\Demo\\draft_report.docx",
+  "process": { "pid": 4321, "name": "explorer.exe" },
+  "source": "simulation",
+  "size_bytes": 2048
+}

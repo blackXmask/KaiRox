@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "status": "scanning",
+  "progress": 42,
+  "scanned_directories": 120,
+  "total_directories": 300,
+  "scanned_files": 4210,
+  "total_files": 9000,
+  "risk_score": null,
+  "message": "Traversing simulated filesystem"
+}
