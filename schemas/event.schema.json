@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kairox.local/schemas/event.schema.json",
+  "$comment": "DRAFT - pending M1 sign-off. Not a frozen contract.",
+  "title": "KAIROX Activity Event",
+  "description": "A file-system activity event collected by KAIROX.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "type": "integer", "const": 1 },
+    "event_id": { "type": "string", "format": "uuid" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "event_type": {
+      "type": "string",
+      "enum": ["file_created", "file_modified", "file_deleted", "file_renamed", "directory_changed"]
+    },
+    "file_path": { "type": "string", "minLength": 1 },
+    "old_path": { "type": ["string", "null"] },
+    "process": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "pid": { "type": "integer", "minimum": 0 },
+            "name": { "type": "string", "minLength": 1 }
+          },
+          "required": ["pid", "name"]
+        },
+        { "type": "null" }
+      ]
+    },
+    "source": { "type": "string", "enum": ["windows_collector", "simulation"] },
+    "size_bytes": {
+      "type": ["integer", "null"],
+      "minimum": 0,
+      "description": "File size in bytes. Null when unknown (file_deleted) or not applicable (directory_changed)."
+    }
+  },
+  "required": ["schema_version", "event_id", "timestamp", "event_type", "file_path", "old_path", "process", "source", "size_bytes"],
+  "allOf": [
+    {
+      "if": { "properties": { "event_type": { "const": "file_renamed" } }, "required": ["event_type"] },
+      "then": { "properties": { "old_path": { "type": "string", "minLength": 1 } } },
+      "else": { "properties": { "old_path": { "type": "null" } } }
+    }
+  ],
+  "$defs": {
+    "EventBatch": {
+      "title": "KAIROX Event Batch",
+      "description": "A collection of events from one monitoring time window.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": { "type": "integer", "const": 1 },
+        "window_start": { "type": "string", "format": "date-time" },
+        "window_end": { "type": "string", "format": "date-time" },
+        "events": { "type": "array", "items": { "$ref": "#" } }
+      },
+      "required": ["schema_version", "window_start", "window_end", "events"]
+    }
+  }
+}

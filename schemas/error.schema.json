@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kairox.local/schemas/error.schema.json",
+  "$comment": "DRAFT - pending M1 + M2 sign-off on standard error codes. Not a frozen contract.",
+  "title": "KAIROX Backend Error",
+  "description": "A standardized error returned by a KAIROX component.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "type": "integer", "const": 1 },
+    "code": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]*$" },
+    "message": { "type": "string", "minLength": 1 },
+    "details": { "type": "object", "additionalProperties": true },
+    "retryable": { "type": "boolean" }
+  },
+  "required": ["schema_version", "code", "message", "details", "retryable"]
+}

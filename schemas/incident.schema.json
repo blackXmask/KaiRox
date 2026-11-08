@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kairox.local/schemas/incident.schema.json",
+  "$comment": "DRAFT - pending team sign-off on how incidents are created and updated. Not a frozen contract.",
+  "title": "KAIROX Security Incident",
+  "description": "A security incident identified by KAIROX.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "type": "integer", "const": 1 },
+    "incident_id": { "type": "string", "format": "uuid" },
+    "title": { "type": "string", "minLength": 1 },
+    "status": { "type": "string", "enum": ["open", "investigating", "resolved"] },
+    "risk_level": {
+      "type": "string",
+      "enum": ["critical", "high", "medium", "low"],
+      "description": "Incidents cannot be 'info'. Mirrors ThreatIncident.severity: Exclude<Risk, \"Info\"> in src/types.ts."
+    },
+    "first_seen": { "type": "string", "format": "date-time" },
+    "last_seen": { "type": "string", "format": "date-time" },
+    "category": { "type": ["string", "null"] },
+    "attribution": { "type": ["string", "null"] },
+    "detection_rule": { "type": ["string", "null"] },
+    "classification": { "type": ["string", "null"] },
+    "canary_id": { "type": ["string", "null"] },
+    "path": { "type": ["string", "null"] },
+    "node_id": { "type": ["string", "null"] },
+    "summary": { "type": ["string", "null"] },
+    "origin": {
+      "type": "string",
+      "enum": ["demo", "real"],
+      "description": "Identifies whether this incident is simulated or from real monitoring."
+    }
+  },
+  "required": ["schema_version", "incident_id", "title", "status", "risk_level", "first_seen", "last_seen", "category", "attribution", "detection_rule", "classification", "canary_id", "path", "node_id", "summary", "origin"]
+}

@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kairox.local/schemas/detection.schema.json",
+  "$comment": "DRAFT - pending M2 sign-off on score semantics, engine names, and risk levels. Not a frozen contract.",
+  "title": "KAIROX Detection",
+  "description": "A ransomware-related detection produced by the detection engine.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "type": "integer", "const": 1 },
+    "detection_id": { "type": "string", "format": "uuid" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "related_event_ids": { "type": "array", "items": { "type": "string", "format": "uuid" }, "uniqueItems": true },
+    "risk_level": { "type": "string", "enum": ["critical", "high", "medium", "low", "info"] },
+    "score": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Detection score from 0 to 100. This is not a calibrated probability."
+    },
+    "reason": { "type": "string", "minLength": 1 },
+    "engine": { "type": "string", "enum": ["rules", "lightgbm", "isolation_forest"] },
+    "model_version": { "type": "string", "minLength": 1 },
+    "window_start": { "type": "string", "format": "date-time" },
+    "window_end": { "type": "string", "format": "date-time" }
+  },
+  "required": ["schema_version", "detection_id", "timestamp", "related_event_ids", "risk_level", "score", "reason", "engine", "model_version", "window_start", "window_end"]
+}

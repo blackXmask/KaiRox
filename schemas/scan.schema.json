@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kairox.local/schemas/scan.schema.json",
+  "$comment": "DRAFT - pending M1 sign-off on scan progress and risk-score meaning. Not a frozen contract.",
+  "title": "KAIROX Scan State",
+  "description": "Current state and progress of a KAIROX file-system scan.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "type": "integer", "const": 1 },
+    "status": {
+      "type": "string",
+      "enum": ["idle", "initializing", "scanning", "suspicious", "completed", "cancelled"]
+    },
+    "progress": { "type": "integer", "minimum": 0, "maximum": 100 },
+    "scanned_directories": { "type": "integer", "minimum": 0 },
+    "total_directories": { "type": "integer", "minimum": 0 },
+    "scanned_files": { "type": "integer", "minimum": 0 },
+    "total_files": { "type": "integer", "minimum": 0 },
+    "risk_score": { "type": ["integer", "null"], "minimum": 0, "maximum": 100 },
+    "message": { "type": "string" }
+  },
+  "required": ["schema_version", "status", "progress", "scanned_directories", "total_directories", "scanned_files", "total_files", "risk_score", "message"]
+}
