@@ -1,3 +1,5 @@
+pub mod storage;
+
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct RuntimeInfo {
