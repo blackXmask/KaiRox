@@ -566,6 +566,34 @@ src-tauri/src/
 
 **Main risks:** the `App.tsx` refactor breaking all eight screens, render performance at real event rates, and the path-to-node mapping being left until Phase 3.
 
+#### M3 status
+
+**Phase B — service seam: complete.** `App.tsx` no longer imports `data.ts`, the simulation engine, or `invoke` directly; all five dashboard states come from `useDashboardData()`. Verified in the browser: demo renders `CAN-001…005` and `INC-001…004` with the incident detail resolving its canary to a readable label, add/toggle/reset/scan all work, the feed ticks, and there are zero console errors.
+
+**Phase A — contracts: partial.** All six schemas exist and the type mismatches are reconciled. Two items remain: generating the types (deferred until the contracts freeze — `tests/contract/drift.test.ts` guards against drift in the meantime, 153 checks), and resolving the eight open decisions recorded in `schemas/DECISIONS.md`.
+
+**Phase D — persistence: complete.** WAL, versioned migrations, four repositories, 23 tests.
+
+**Phase C — path-to-node: blocked** on the team decision. `tauriBackend` returns `nodes: []` rather than inventing a mapping.
+
+**Phase E — real-time: not started.** The integration points exist (`subscribe()` on the interface, `simulatedFeed` gating, the backend error gate) but nothing subscribes yet.
+
+| # | Deliverable | Status |
+|---|-------------|--------|
+| 1 | Six shared JSON schemas | **Done** (DRAFT) |
+| 1b | Generated types for Rust and TypeScript | **Blocked** on contract freeze; drift guard in place |
+| 2 | SQLite database and versioned migrations | **Done** |
+| 3 | Four repositories with tests | **Done** (23 tests) |
+| 4 | TypeScript backend interface | **Done** |
+| 5 | Demo and real backend adapters | **Done** — `tauriBackend` uses provisional command names pending M1 |
+| 6 | Real-time integration with bounded rendering | **Not started** |
+| 7 | Persistent event and incident history | **Not started** |
+| 8 | Integration and database tests | **Partial** — 23 Rust storage tests + 237 frontend contract checks; no cross-boundary test yet |
+
+**Also done:** the demo simulation, demo scan and sample-scenario buttons are gated on `backend.simulatedFeed`, so a live backend cannot be shown simulated events; a failed live backend blocks the dashboard instead of falling back to demo data.
+
+**Still open for the team:** the eight decisions in `schemas/DECISIONS.md`, the provisional Tauri command names in `tauriBackend.ts`, and wiring the Settings toggle to `createBackend(kind)` (the backend currently switches via `?backend=live`, which is the testable entry point).
+
 ### Shared development rules
 
 1. **Agree on interfaces first.** Before full implementation, finalize the event schema, detection schema, JSON Lines protocol, error format, database ownership, and communication responsibilities.
