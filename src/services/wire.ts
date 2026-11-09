@@ -108,8 +108,13 @@ export interface WireDetection {
 export interface WireIncident {
   schema_version: number;
   incident_id: string;
-  /** Readable UI label (`INC-001`). Optional; live incidents may lack one. */
-  display_id: string | null;
+  /**
+   * Readable UI label (`INC-001`).
+   *
+   * Optional - absent from the schema's `required`, so a producer may omit it
+   * entirely rather than send `null`. Live incidents may have no label yet.
+   */
+  display_id?: string | null;
   title: string;
   status: WireIncidentStatus;
   risk_level: WireIncidentRiskLevel;
@@ -131,8 +136,13 @@ export interface WireIncident {
 export interface WireCanary {
   schema_version: number;
   canary_id: string;
-  /** Readable UI label (`CAN-001`). Optional; live canaries may lack one. */
-  display_id: string | null;
+  /**
+   * Readable UI label (`CAN-001`).
+   *
+   * Optional - absent from the schema's `required`, so a producer may omit it
+   * entirely rather than send `null`. Live canaries may have no label yet.
+   */
+  display_id?: string | null;
   canary_path: string;
   created_at: string;
   status: WireCanaryStatus;

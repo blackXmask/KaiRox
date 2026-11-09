@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview --host 127.0.0.1",
     "validate:schemas": "node tests/contract/validate.mjs",
-    "test:contract": "npm run validate:schemas && node tests/contract/normalize.test.ts",
+    "validate:drift": "node tests/contract/drift.test.ts",
+    "test:contract": "npm run validate:schemas && npm run validate:drift && node tests/contract/normalize.test.ts",
     "tauri": "tauri"
   },
   "dependencies": {
